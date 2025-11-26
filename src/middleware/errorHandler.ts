@@ -67,7 +67,7 @@ export const errorHandler = (
 };
 
 export const notFoundHandler = (req: Request, res: Response) => {
-  res.status(404).json({
+  return res.status(404).json({
     success: false,
     message: "Route not found",
     error: {
