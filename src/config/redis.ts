@@ -15,7 +15,7 @@ redisClient.on('error', (err) => {
 export async function connectRedis() {
   try {
     await redisClient.connect();
-    console.log(`Redis connected on ${env.redis.host}:${env.redis.port}`);
+    console.log(`✓ Redis connected on ${env.redis.host}:${env.redis.port}`);
   } catch (err) {
     console.error('Redis connection error:', err);
     process.exit(1);
@@ -40,6 +40,14 @@ export async function redisSet(
 
 export async function redisDelete(key: string): Promise<void> {
   await redisClient.del(key);
+}
+
+export async function redisDeletePattern(pattern: string): Promise<void> {
+  // Use SCAN for production (more efficient than KEYS)
+  const keys = await redisClient.keys(pattern);
+  if (keys.length > 0) {
+    await redisClient.del(keys);
+  }
 }
 
 export { redisClient };
