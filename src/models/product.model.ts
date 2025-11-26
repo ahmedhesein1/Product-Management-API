@@ -28,6 +28,7 @@ const productSchema = new Schema<ProductDoc>(
       type: String,
       default: null,
       maxlength: 1000,
+      trim: true,
     },
     category: {
       type: String,
