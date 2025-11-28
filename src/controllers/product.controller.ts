@@ -1,10 +1,6 @@
-import { Request, Response } from "express";
-import { Product } from "../models/product.model";
-import {
-  CreateProductInput,
-  UpdateProductInput,
-  ProductResponse,
-} from "../types/product.types";
+import { Request, Response } from 'express';
+import { Product } from '../models/product.model';
+import { CreateProductInput, UpdateProductInput, ProductResponse } from '../types/product.types';
 
 const formatProductResponse = (product: any): ProductResponse => {
   return {
@@ -25,6 +21,11 @@ const formatProductResponse = (product: any): ProductResponse => {
 export const createProduct = async (req: Request, res: Response) => {
   const input: CreateProductInput = req.body;
 
+  input.price = Number(input.price.toFixed(2));
+  if (input.discountPrice !== undefined && input.discountPrice !== null) {
+    input.discountPrice = Number(input.discountPrice.toFixed(2));
+  }
+
   const product = Product.build({
     sku: input.sku,
     name: input.name,
@@ -42,7 +43,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
   res.status(201).json({
     success: true,
-    message: "Product created successfully",
+    message: 'Product created successfully',
     data: formatProductResponse(product),
   });
 };
@@ -54,37 +55,26 @@ export const getAllProducts = async (req: Request, res: Response) => {
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 10));
   const skip = (page - 1) * limit;
 
-  const {
-    category,
-    type,
-    search,
-    sort = "createdAt",
-    order = "asc",
-    minPrice,
-    maxPrice,
-  } = req.query;
+  const { category, type, search, sort = 'createdAt', order = 'asc', minPrice, maxPrice } = req.query;
 
   const filter: any = {};
 
-  if (userRole === "user") {
-    filter.type = "public";
+  if (userRole === 'user') {
+    filter.type = 'public';
   }
 
   if (category) {
     filter.category = category;
   }
 
-  if (type && (type === "public" || type === "private")) {
-    if (userRole === "admin") {
+  if (type && (type === 'public' || type === 'private')) {
+    if (userRole === 'admin') {
       filter.type = type;
     }
   }
 
   if (search) {
-    filter.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
-    ];
+    filter.$or = [{ name: { $regex: search, $options: 'i' } }, { description: { $regex: search, $options: 'i' } }];
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {
@@ -98,10 +88,10 @@ export const getAllProducts = async (req: Request, res: Response) => {
   }
 
   // Build sort
-  const sortOrder = order === "desc" ? -1 : 1;
-  const sortField = ["name", "price", "quantity", "createdAt"].includes(sort as string)
+  const sortOrder = order === 'desc' ? -1 : 1;
+  const sortField = ['name', 'price', 'quantity', 'createdAt'].includes(sort as string)
     ? (sort as string)
-    : "createdAt";
+    : 'createdAt';
   const sortObj: any = { [sortField]: sortOrder };
 
   const [products, totalItems] = await Promise.all([
@@ -115,7 +105,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
   res.status(200).json({
     success: true,
-    message: "Products retrieved successfully",
+    message: 'Products retrieved successfully',
     data: products.map(formatProductResponse),
     pagination: {
       currentPage: page,
@@ -132,14 +122,14 @@ export const getProductById = async (req: Request, res: Response) => {
   const userRole = req.userRole!;
   const product = req.product!;
 
-  if (userRole === "user" && product.type === "private") {
+  if (userRole === 'user' && product.type === 'private') {
     return res.status(404).json({
       success: false,
-      message: "Product not found",
+      message: 'Product not found',
       error: {
-        code: "NOT_FOUND",
+        code: 'NOT_FOUND',
         details: {
-          resource: "Product",
+          resource: 'Product',
           id: req.params.id,
         },
       },
@@ -148,9 +138,9 @@ export const getProductById = async (req: Request, res: Response) => {
 
   console.log(`Product retrieved: ${product.sku} - ${product.name}`);
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
-    message: "Product retrieved successfully",
+    message: 'Product retrieved successfully',
     data: formatProductResponse(product),
   });
 };
@@ -158,6 +148,7 @@ export const getProductById = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   const input: UpdateProductInput = req.body;
   const product = req.product!;
+  console.log('Update input:', product);
 
   if (input.name !== undefined) product.name = input.name;
   if (input.description !== undefined) {
@@ -177,7 +168,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
   res.status(200).json({
     success: true,
-    message: "Product updated successfully",
+    message: 'Product updated successfully',
     data: formatProductResponse(product),
   });
 };
@@ -201,7 +192,7 @@ export const getProductStats = async (req: Request, res: Response) => {
   let totalDiscountedValue = 0;
   let outOfStockCount = 0;
   const categoryMap = new Map<string, { count: number; totalValue: number }>();
-  const typeMap = new Map<"public" | "private", { count: number; totalValue: number }>();
+  const typeMap = new Map<'public' | 'private', { count: number; totalValue: number }>();
 
   products.forEach((product) => {
     const inventoryValue = product.price * product.quantity;
@@ -228,13 +219,11 @@ export const getProductStats = async (req: Request, res: Response) => {
 
   const averagePrice = totalProducts > 0 ? totalInventoryValue / totalProducts : 0;
 
-  const productsByCategory = Array.from(categoryMap.entries()).map(
-    ([category, stats]) => ({
-      category,
-      count: stats.count,
-      totalValue: parseFloat(stats.totalValue.toFixed(2)),
-    })
-  );
+  const productsByCategory = Array.from(categoryMap.entries()).map(([category, stats]) => ({
+    category,
+    count: stats.count,
+    totalValue: parseFloat(stats.totalValue.toFixed(2)),
+  }));
 
   const productsByType = Array.from(typeMap.entries()).map(([type, stats]) => ({
     type,
@@ -246,7 +235,7 @@ export const getProductStats = async (req: Request, res: Response) => {
 
   res.status(200).json({
     success: true,
-    message: "Statistics retrieved successfully",
+    message: 'Statistics retrieved successfully',
     data: {
       totalProducts,
       totalInventoryValue: parseFloat(totalInventoryValue.toFixed(2)),
