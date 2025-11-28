@@ -5,6 +5,11 @@ mongoose.set('strictQuery', true);
 
 export async function connectMongo() {
   try {
+    // If already connected or connecting, skip
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+      return;
+    }
+
     await mongoose.connect(env.mongoUri, {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,

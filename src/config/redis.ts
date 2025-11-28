@@ -40,10 +40,10 @@ export async function redisSet(
 
 export async function redisDelete(key: string): Promise<void> {
   await redisClient.del(key);
+  console.log(`Cache deleted for key: ${key}`);
 }
 
 export async function redisDeletePattern(pattern: string): Promise<void> {
-  // Use SCAN for production (more efficient than KEYS)
   const keys = await redisClient.keys(pattern);
   if (keys.length > 0) {
     await redisClient.del(keys);
