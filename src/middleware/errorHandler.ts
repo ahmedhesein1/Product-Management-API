@@ -9,7 +9,7 @@ export const errorHandler = (
 ) => {
   console.error("Error:", err);
 
-  if (err.name === "CastError" && err.kind === "ObjectId") {
+  if (err.name === "CastError") {
     return res.status(404).json({
       success: false,
       message: "Product not found",
@@ -23,11 +23,11 @@ export const errorHandler = (
     });
   }
 
-  if (err instanceof MongooseError.ValidationError) {
-    const errors = Object.values(err.errors).map((error: any) => ({
+  if (err.name === "ValidationError") {
+    const errors = err.errors ? Object.values(err.errors).map((error: any) => ({
       field: error.path,
       message: error.message,
-    }));
+    })) : [{ field: "unknown", message: err.message }];
 
     return res.status(400).json({
       success: false,
