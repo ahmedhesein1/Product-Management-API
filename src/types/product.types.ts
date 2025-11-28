@@ -1,5 +1,4 @@
 import { Document } from "mongoose";
-// Attributes required to create a product in DB
 export interface ProductAttrs {
   sku: string;
   name: string;
@@ -11,7 +10,6 @@ export interface ProductAttrs {
   quantity: number;
 }
 
-// MongoDB document type
 export interface ProductDoc extends Document {
   sku: string;
   name: string;
