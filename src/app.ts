@@ -3,18 +3,23 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
 import compression from "compression";
+import swaggerUi from "swagger-ui-express";
 import { connectMongo } from "./config/mongoose";
 import { redisClient } from "./config/redis";
-
-
+import { swaggerDocument } from "./config/swagger";
+import productRoutes from "./routes/product.routes";
+import { generalLimiter } from "./middleware/rateLimiter";
+import { errorHandler } from "./middleware/errorHandler";
 
 export async function createApp(): Promise<Application> {
   const app = express();
 
   await connectMongo();
 
-  await redisClient.connect();
-  console.log("Redis connected successfully");
+  if (!redisClient.isOpen) {
+    await redisClient.connect();
+    console.log("Redis connected successfully");
+  }
 
   app.use(helmet());
   app.use(cors());
@@ -23,6 +28,12 @@ export async function createApp(): Promise<Application> {
   app.use(express.urlencoded({ extended: true }));
   app.use(morgan("dev"));
 
+  app.use(generalLimiter);
+
+  // Swagger documentation
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+  // Health check
   app.get("/health", (req: Request, res: Response) => {
     res.status(200).json({
       status: "ok",
@@ -31,12 +42,17 @@ export async function createApp(): Promise<Application> {
     });
   });
 
+  // API routes
+  app.use("/api/products", productRoutes);
+
   app.use((req: Request, res: Response) => {
     res.status(404).json({
       status: "error",
       message: `Route ${req.originalUrl} not found`,
     });
   });
+
+  app.use(errorHandler);
 
   return app;
 }
