@@ -53,17 +53,23 @@ cd Product-Management-API
 
 # 2. Create environment file
 cp .env.example .env
-# Edit .env with your MongoDB Atlas URI
 
-# 3. Start all services (API + Redis)
-docker compose up -d
+# 3. Install dependencies locally (including dev dependencies for build)
+npm install
 
-# 4. View logs
+# 4. Build the project locally
+npm run build
+
+# 5. Start all services (API + Redis) using Docker
+docker compose up --build -d
+
+# 6. View logs
 docker compose logs -f
 
-# 5. API is ready at http://localhost:8000
+# 7. Test API
 curl http://localhost:8000/health
-```
+
+
 
 **What's included:**
 - ✅ Node.js application container
