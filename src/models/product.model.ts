@@ -1,5 +1,5 @@
-import mongoose, { Schema, Model } from "mongoose";
-import { ProductAttrs, ProductDoc } from "../types/product.types";
+import mongoose, { Schema, Model } from 'mongoose';
+import { ProductAttrs, ProductDoc } from '../types/product.types';
 
 interface ProductModel extends Model<ProductDoc> {
   build(attrs: ProductAttrs): ProductDoc;
@@ -40,16 +40,12 @@ const productSchema = new Schema<ProductDoc>(
     type: {
       type: String,
       required: true,
-      enum: ["public", "private"],
+      enum: ['public', 'private'],
     },
     price: {
       type: Number,
       required: true,
       min: 0.01,
-      validate: {
-        validator: (v: number) => /^\d+(\.\d{1,2})?$/.test(v.toString()),
-        message: "Price can have max 2 decimal places",
-      },
     },
     discountPrice: {
       type: Number,
@@ -61,14 +57,7 @@ const productSchema = new Schema<ProductDoc>(
             if (v === null) return true;
             return v < this.price;
           } as any,
-          message: "discountPrice must be less than price",
-        },
-        {
-          validator: ((v: number | null) => {
-            if (v === null) return true;
-            return /^\d+(\.\d{1,2})?$/.test(v.toString());
-          }) as any,
-          message: "Discount price can have max 2 decimal places",
+          message: 'discountPrice must be less than price',
         },
       ],
     },
@@ -78,13 +67,13 @@ const productSchema = new Schema<ProductDoc>(
       min: 0,
       validate: {
         validator: Number.isInteger,
-        message: "Quantity must be an integer",
+        message: 'Quantity must be an integer',
       },
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Custom builder (for TS safety)
@@ -92,7 +81,4 @@ productSchema.statics.build = (attrs: ProductAttrs) => {
   return new Product(attrs);
 };
 
-export const Product = mongoose.model<ProductDoc, ProductModel>(
-  "Product",
-  productSchema
-);
+export const Product = mongoose.model<ProductDoc, ProductModel>('Product', productSchema);
